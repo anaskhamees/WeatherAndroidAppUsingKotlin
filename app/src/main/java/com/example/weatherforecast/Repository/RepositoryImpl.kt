@@ -1,14 +1,11 @@
-package com.example.iti.data.repository
+package com.example.weatherforecast.Repository
 
-import com.example.iti.data.db.local.favourites.LocalDataSource
-import com.example.iti.data.db.remote.RemoteDataSource
-import com.example.iti.data.db.sharedPrefrences.SharedPrefsDataSource
-import com.example.iti.data.model.DailyForecast
-import com.example.iti.data.model.Hourly
-import com.example.iti.data.model.Weather
-import com.example.iti.data.model.WeatherEntity
-import com.example.iti.utils.Constants.ENGLISH_SHARED
-import com.example.iti.utils.Constants.LANGUAGE_SHARED
+
+import com.example.weatherforecast.Model.Weather
+import com.example.weatherforecast.Model.Hourly
+import com.example.weatherforecast.Model.DailyForecast
+import com.example.weatherforecast.Model.WeatherEntity
+
 import kotlinx.coroutines.flow.Flow
 
 class RepositoryImpl(

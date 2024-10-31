@@ -1,9 +1,9 @@
-package com.example.iti.data.repository
+package com.example.weatherforecast.Repository
 
-import com.example.iti.data.model.DailyForecast
-import com.example.iti.data.model.Hourly
-import com.example.iti.data.model.Weather
-import com.example.iti.data.model.WeatherEntity
+import com.example.weatherforecast.Model.Weather
+import com.example.weatherforecast.Model.Hourly
+import com.example.weatherforecast.Model.DailyForecast
+import com.example.weatherforecast.Model.WeatherEntity
 import kotlinx.coroutines.flow.Flow
 
 interface Repository {

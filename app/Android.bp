@@ -1,0 +1,75 @@
+// Android.bp file
+
+// Defines the Android app module
+android_app {
+    name: "ItiApp",
+    namespace: "com.example.iti",
+    srcs: ["src/**/*.java", "src/**/*.kt"], // Kotlin and Java sources
+
+    compile_multilib: "both",
+    platform_apis: false,
+
+    min_sdk_version: "24",
+    target_sdk_version: "34",
+    version_name: "1.0",
+    version_code: 1,
+
+    // Java compatibility options
+    java_version: "1.8",
+    kotlincflags: ["-Xjvm-default=all"],
+
+    // Enables view binding
+    view_binding: true,
+
+    // Dependencies (equivalent to the dependencies block in Gradle)
+    static_libs: [
+        "androidx_core_ktx",
+        "androidx_appcompat",
+        "material",
+        "androidx_activity",
+        "androidx_constraintlayout",
+        "androidx_junit_ktx",
+        "junit",
+        "androidx_junit",
+        "androidx_espresso_core",
+        "kotlin_stdlib_jdk7",
+        "kotlin_stdlib",
+        "play_services_maps",
+        "play_services_location",
+        "places",
+        "lottie",
+        "lifecycle_viewmodel_ktx",
+        "lifecycle_livedata_ktx",
+        "activity_ktx",
+        "work_runtime_ktx",
+        "retrofit",
+        "retrofit_converter_gson",
+        "lifecycle_runtime_ktx",
+        "kotlinx_coroutines_android",
+        "kotlinx_coroutines_core",
+        "glide",
+        "swiperefreshlayout",
+        "room_runtime",
+        "room_ktx",
+        "room_compiler",
+    ],
+
+    // Enable ProGuard for release builds
+    proguard: {
+        enabled: true,
+        files: ["proguard-android-optimize.txt", "proguard-rules.pro"],
+    },
+}
+
+// Testing configuration (JUnit, Robolectric, etc.)
+android_test {
+    name: "ItiAppTest",
+    static_libs: [
+        "junit",
+        "androidx_test_core",
+        "robolectric",
+        "kotlinx_coroutines_test",
+        "core_testing",
+    ],
+}
+

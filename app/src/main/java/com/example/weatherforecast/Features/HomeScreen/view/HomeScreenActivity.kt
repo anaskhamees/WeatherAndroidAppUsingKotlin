@@ -6,12 +6,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.location.Geocoder
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -63,30 +67,48 @@ import com.google.gson.Gson
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
+import java.util.Calendar
 import java.util.Locale
 
 class HomeScreenActivity : AppCompatActivity() {
+    /// Binding instance for accessing layout views.
     private lateinit var binding: ActivityHomeScreenBinding
+
+    /// Adapter for displaying hourly weather data.
     private lateinit var hourlyAdapter: HourlyAdapter
+
+    /// Adapter for displaying daily weather data.
     private lateinit var dailyAdapter: DailyAdapter
-    private var city: String = ""
+
+    /// Default city name to display.
+    private var city: String = "Alex"
+
+    /// Latitude passed from the intent.
     private var passedLat: Double = 0.0
+
+    /// Longitude passed from the intent.
     private var passedLong: Double = 0.0
+
+    /// Flag indicating if the view is for display only.
     private var isViewOnly: Boolean = false
+
+    /// City name retrieved from SharedPreferences.
     private var cityName: String? = null
 
+    /// ViewModel for accessing weather data.
     private val weatherViewModel: HomeViewModel by viewModels { HomeViewModelFactory(getRepository()) }
-    private val settingsViewModel: SettingsViewModel by viewModels {
-        SettingsViewModelFactory(
-            getRepository()
-        )
-    }
-    private val favouritesViewModel: FavouritesViewModel by viewModels {
-        FavouritesViewModelFactory(
-            getRepository()
-        )
-    }
 
+    /// ViewModel for accessing settings data.
+    private val settingsViewModel: SettingsViewModel by viewModels { SettingsViewModelFactory(getRepository()) }
+
+    /// ViewModel for accessing favourites data.
+    private val favouritesViewModel: FavouritesViewModel by viewModels { FavouritesViewModelFactory(getRepository()) }
+
+    /**
+     * @brief Initializes the activity, views, adapters, and starts data fetch.
+     * @param savedInstanceState Saved instance state bundle.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         checkRunningLanguage()
@@ -108,6 +130,9 @@ class HomeScreenActivity : AppCompatActivity() {
         notificationServices(this, passedLat, passedLong)
     }
 
+    /**
+     * @brief Sets up click listeners for the main action buttons in the view.
+     */
     private fun setUpViews() {
         binding.btnMaps.setOnClickListener {
             if (isNetworkAvailable(this)) {
@@ -131,6 +156,9 @@ class HomeScreenActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * @brief Initializes the adapters for displaying hourly and daily weather data.
+     */
     private fun setUpAdapters() {
         dailyAdapter = DailyAdapter(settingsViewModel, lifecycleScope)
         hourlyAdapter = HourlyAdapter(settingsViewModel, lifecycleScope)
@@ -141,14 +169,21 @@ class HomeScreenActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * @brief Retrieves latitude and longitude from the incoming intent.
+     */
     private fun gettingPassedKeysFromIntents() {
         passedLat = intent.getDoubleExtra(LATITUDE_SHARED, 0.0)
-        Log.d("JJJJJ", "passed lat : ${passedLat}")
         passedLong = intent.getDoubleExtra(LONGITUDE_SHARED, 0.0)
         isViewOnly = intent.getBooleanExtra("viewOnly", false)
         cityName = intent.getStringExtra(FAVOURITE_SHARED_CITY)
     }
 
+    /**
+     * @brief Sets the city name based on latitude and longitude using the Geocoder API.
+     * @param lat Latitude of the location.
+     * @param long Longitude of the location.
+     */
     @Suppress("DEPRECATION")
     private fun setCityNameBasedOnLatAndLong(lat: Double, long: Double) {
         val geocoder = Geocoder(this, Locale.getDefault())
@@ -183,6 +218,7 @@ class HomeScreenActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun fetchDataBasedOnLatAndLong() {
         lifecycleScope.launch {
             try {
@@ -233,7 +269,6 @@ class HomeScreenActivity : AppCompatActivity() {
                             delay(600)
                             showLoading(false)
                             slideInAndScaleView(binding.cardDaysDetails)
-//                        binding.cardDaysDetails.visibility = View.VISIBLE
                             setVisibilityOfViewsOnScreen(false)
                             val weatherData = apiState.data as Weather
                             launch {
@@ -268,7 +303,6 @@ class HomeScreenActivity : AppCompatActivity() {
             val gson = Gson()
             val weatherData: Weather = gson.fromJson(weatherJson, Weather::class.java)
             updateUi(weatherData) // Update UI with the saved weather data
-            Log.d("mahmoud", "Weather data loaded from SharedPreferences ${weatherData}")
         } else {
             // Handle case when no data is saved
             Log.e("WeatherError", "No weather data available in SharedPreferences.")
@@ -279,38 +313,53 @@ class HomeScreenActivity : AppCompatActivity() {
     private fun updateUi(weather: Weather) {
         val unit = settingsViewModel.getTemperatureUnit()
         val windSpeedUnit = settingsViewModel.getWindSpeedUnit()
+        // Set background based on time of day
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
 
-        //set Lottie based on weather
+
+        // Set Lottie based on weather
         val lottieAnimation = checkWeatherDescription(this, weather)
         binding.animWeather.setAnimation(lottieAnimation)
         binding.animWeather.playAnimation()
 
-        //update Temp
+        Log.d("WeatherDebug", "Weather Main Data: ${weather.main}")
+
+        // Debugging: Log the raw temperature values
+        Log.d("WeatherDebug", "Current Temp: ${weather.main.temp}")
+        Log.d("WeatherDebug", "Min Temp: ${weather.main.temp_min}")
+        Log.d("WeatherDebug", "Max Temp: ${weather.main.temp_max}")
+
+        // Convert temperatures
         val currentTemp = convertTempUnitFromCelsiusToAny(weather.main.temp, unit)
-        binding.tvCurrentDegree.text =
-            String.format(TEMPERATURE_FORMAT, currentTemp, getTempUnitSymbol(unit))
         val minTemp = convertTempUnitFromCelsiusToAny(weather.main.temp_min, unit)
-        binding.tvTempMin.text = String.format(TEMPERATURE_FORMAT, minTemp, getTempUnitSymbol(unit))
         val maxTemp = convertTempUnitFromCelsiusToAny(weather.main.temp_max, unit)
+
+        // Debugging: Log converted temperature values
+        Log.d("WeatherDebug", "Converted Current Temp: $currentTemp")
+        Log.d("WeatherDebug", "Converted Min Temp: $minTemp")
+        Log.d("WeatherDebug", "Converted Max Temp: $maxTemp")
+
+        // Set text on TextViews
+        binding.tvCurrentDegree.text = String.format(TEMPERATURE_FORMAT, currentTemp, getTempUnitSymbol(unit))
+        binding.tvTempMin.text = String.format(TEMPERATURE_FORMAT, minTemp, getTempUnitSymbol(unit))
         binding.tvTempMax.text = String.format(TEMPERATURE_FORMAT, maxTemp, getTempUnitSymbol(unit))
 
-        //update weather details
+        // Update weather details
         val cityName = city.trim()
         val words = cityName.split(" ")
-
-        if (words.size > 2) {
+        binding.tvCityName.text = if (words.size > 2) {
             val firstLine = words.take(2).joinToString(" ") // First two words
             val secondLine = words.drop(2).joinToString(" ") // Remaining words
-            binding.tvCityName.text = "$firstLine\n$secondLine"
+            "$firstLine\n$secondLine"
         } else {
-            binding.tvCityName.text = cityName // If it's 2 words or less, keep it as is
+            cityName // If it's 2 words or less, keep it as is
         }
         binding.tvWeatherStatus.text = weather.weather[0].description
             .split(" ")
             .joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
         binding.tvDate.text = date()
-        binding.tvPressureValue.text =
-            getString(com.example.weatherforecast.R.string.hpa, weather.main.pressure)
+        binding.tvPressureValue.text = getString(com.example.weatherforecast.R.string.hpa, weather.main.pressure)
         binding.tvHumidityValue.text = "${weather.main.humidity} %"
         val windSpeed = convertWindSpeed(weather.wind.speed, METER_PER_SECOND, windSpeedUnit)
         binding.tvWindValue.text = String.format(
@@ -320,11 +369,10 @@ class HomeScreenActivity : AppCompatActivity() {
             getString(getWindSpeedUnitSymbol(windSpeedUnit))
         )
 
-        // additional info
+        // Additional info
         binding.tvCloudValue.text = "${weather.clouds.all} %"
         binding.tvSunriseValue.text = formatTime(weather.sys.sunrise)
         binding.tvSunsetValue.text = formatTime(weather.sys.sunset)
-
 
         // Save data to local database when Save button is clicked
         onSaveButtonClick(
@@ -339,6 +387,7 @@ class HomeScreenActivity : AppCompatActivity() {
         )
     }
 
+// Handles the "Save" button click to save current weather data into the database
     private fun onSaveButtonClick(
         currentTemp: Double,
         minTemp: Double,
@@ -350,7 +399,7 @@ class HomeScreenActivity : AppCompatActivity() {
         lottie: Int
     ) {
         binding.btnSave.setOnClickListener {
-            // Create a WeatherEntity from the current UI data
+            // Create a WeatherEntity object with current UI data for database storage
             val weatherEntity = WeatherEntity(
                 cityName = city,
                 description = binding.tvWeatherStatus.text.toString(),
@@ -368,9 +417,10 @@ class HomeScreenActivity : AppCompatActivity() {
                 longitude = long,
                 lottie = lottie
             )
-            // Insert the WeatherEntity into the database via the ViewModel
+            // Launch a coroutine to insert the WeatherEntity into the database using ViewModel
             lifecycleScope.launch {
                 favouritesViewModel.insertWeatherData(weatherEntity)
+                // Show a confirmation message on successful save
                 Toast.makeText(
                     this@HomeScreenActivity,
                     getString(com.example.weatherforecast.R.string.location_saved_successfully),
@@ -379,21 +429,25 @@ class HomeScreenActivity : AppCompatActivity() {
             }
         }
     }
-
+// Collects hourly weather data from ViewModel and updates the UI
     private fun gettingHourlyWeatherDataFromViewModel() {
         lifecycleScope.launch {
+            // Collects data only while the lifecycle is in the STARTED state
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 weatherViewModel.hourlyForecastDataStateFlow.collect { apiState ->
                     when (apiState) {
                         is ApiState.Loading -> {
+                            // Handle loading state
                         }
 
                         is ApiState.Success -> {
+                            // Get the first 9 items from hourly forecast data and update adapter
                             val hourlyList = (apiState.data as Hourly).list.take(9)
                             hourlyAdapter.submitList(hourlyList)
                         }
 
                         is ApiState.Failure -> {
+                            // Log the error message if data retrieval fails
                             Log.e(
                                 "WeatherError",
                                 "Error retrieving hourly forecast data ${apiState.message}"
@@ -404,27 +458,31 @@ class HomeScreenActivity : AppCompatActivity() {
             }
         }
     }
-
+// Collects daily weather data from ViewModel and updates the UI
     private fun gettingDailyWeatherDataFromViewModel() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 weatherViewModel.dailyForecastDataStateFlow.collect { apiState ->
                     when (apiState) {
                         is ApiState.Loading -> {
+                            // Hide daily weather details during loading
                             binding.rvDetailedDays.visibility = View.GONE
                             binding.cardDaysDetails.visibility = View.GONE
                         }
 
                         is ApiState.Success -> {
+                            // Delay to allow for smooth UI updates, then show daily weather details
                             delay(600)
                             binding.rvDetailedDays.visibility = View.VISIBLE
                             binding.cardDaysDetails.visibility = View.VISIBLE
+                            // Update the adapter with a filtered list of daily forecast elements
                             val dailyList =
                                 (apiState.data as List<*>).filterIsInstance<DailyForecastElement>()
                             dailyAdapter.submitList(dailyList)
                         }
 
                         is ApiState.Failure -> {
+                            // Hide daily weather details and log the error
                             binding.rvDetailedDays.visibility = View.GONE
                             binding.cardDaysDetails.visibility = View.GONE
                             Log.e(
@@ -438,16 +496,19 @@ class HomeScreenActivity : AppCompatActivity() {
         }
     }
 
+    // Loads saved location details from the database or network
     private fun savedLocationsDetails() {
         if (cityName != null) {
             lifecycleScope.launch {
                 if (isNetworkAvailable(this@HomeScreenActivity)) {
+                    // If network is available, fetch saved data from the database
                     val weatherEntity = favouritesViewModel.getWeatherCity(cityName!!)
                     if (weatherEntity != null) {
                         disableViewsForFavouritesViewer()
                         fetchDataFromDataBaseOrFromRemoteIfNetworkAvailable(weatherEntity)
                     }
                 } else {
+                    // If offline, load saved data for offline viewing
                     val weatherEntity = favouritesViewModel.getWeatherCity(cityName!!)
                     if (weatherEntity != null) {
                         // Load the offline weather data (you might want to update UI accordingly)
@@ -462,6 +523,7 @@ class HomeScreenActivity : AppCompatActivity() {
         }
     }
 
+    // Hides specific UI elements (Icons) when in "Favorites" viewing mode
     private fun disableViewsForFavouritesViewer() {
         binding.btnMaps.visibility = View.GONE
         binding.btnFavourites.visibility = View.GONE
@@ -470,13 +532,17 @@ class HomeScreenActivity : AppCompatActivity() {
         binding.btnSettings.visibility = View.GONE
     }
 
+    // Fetches weather data based on network availability and updates UI accordingly
     private fun fetchDataFromDataBaseOrFromRemoteIfNetworkAvailable(weatherEntity: WeatherEntity) {
+        // Fetch current weather data based on coordinates
         weatherViewModel.fetchCurrentWeatherDataByCoordinates(
             weatherEntity.latitude,
             weatherEntity.longitude
         )
+        // Sets city name using latitude and longitude
         setCityNameBasedOnLatAndLong(weatherEntity.latitude, weatherEntity.longitude)
         binding.swipeToRefresh.setOnRefreshListener {
+            // Fetch current weather data based on coordinates
             weatherViewModel.fetchCurrentWeatherDataByCoordinates(
                 weatherEntity.latitude,
                 weatherEntity.longitude
@@ -486,13 +552,14 @@ class HomeScreenActivity : AppCompatActivity() {
         Log.e("HomeScreenActivity", "Loaded data from database")
     }
 
-    @SuppressLint("SetTextI18n", "DefaultLocale")
+    // Loads offline weather data and displays it on the UI
+    //@SuppressLint("SetTextI18n", "DefaultLocale")
     private fun loadOfflineData(weatherEntity: WeatherEntity) {
-        // Retrieve units from the SettingsViewModel
+        // Get temperature unit and wind speed unit from settings
         val unit = settingsViewModel.getTemperatureUnit()
         val windSpeedUnit = settingsViewModel.getWindSpeedUnit()
 
-        // Convert and display temperatures
+        // Convert and display temperature values
         val currentTemp = convertTempUnitFromCelsiusToAny(weatherEntity.currentTemp, unit)
         binding.tvCurrentDegree.text =
             String.format(TEMPERATURE_FORMAT, currentTemp, getTempUnitSymbol(unit))
@@ -501,7 +568,7 @@ class HomeScreenActivity : AppCompatActivity() {
         val maxTemp = convertTempUnitFromCelsiusToAny(weatherEntity.maxTemp, unit)
         binding.tvTempMax.text = String.format(TEMPERATURE_FORMAT, maxTemp, getTempUnitSymbol(unit))
 
-        // Set other weather details
+        // Set other weather details on the UI
         binding.tvCityName.text = weatherEntity.cityName
         binding.tvWeatherStatus.text = weatherEntity.description
         binding.tvDate.text = weatherEntity.date
@@ -522,7 +589,7 @@ class HomeScreenActivity : AppCompatActivity() {
         binding.tvSunriseValue.text = formatTime(weatherEntity.sunrise)
         binding.tvSunsetValue.text = formatTime(weatherEntity.sunset)
 
-        // Set Lottie animation
+        // Set Lottie animation based on weather type
         binding.animWeather.setAnimation(weatherEntity.lottie)
         binding.animWeather.playAnimation()
 
@@ -531,23 +598,30 @@ class HomeScreenActivity : AppCompatActivity() {
         binding.swipeToRefresh.isActivated = false
     }
 
+    // Handles swipe-to-refresh logic to reload data
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun swipeToRefresh() {
         binding.swipeToRefresh.setOnRefreshListener {
             if (isNetworkAvailable(this)) {
                 fetchDataBasedOnLatAndLong()
                 binding.swipeToRefresh.isRefreshing = false
             } else {
+                // Show no-network message if offline
                 showSnackBar()
                 binding.swipeToRefresh.isRefreshing = false
             }
         }
     }
 
+    // Checks if network is available and fetches data on activity resume
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onResume() {
         super.onResume()
+        // Load fresh data on resume
         fetchDataBasedOnLatAndLong()
         setUpAdapters()
         if (!isNetworkAvailable(this)) {
+            // Show a message if there’s no network
             showSnackBar()
         }
     }
@@ -568,8 +642,10 @@ class HomeScreenActivity : AppCompatActivity() {
         localDataSource = LocalDataSourceImpl(AppDatabase.getDatabase(this).weatherDao())
     )
 
+    // Sets the visibility of different views depending on loading state
     private fun setVisibilityOfViewsOnScreen(isLoading: Boolean) {
         if (isLoading) {
+            // Hide main content while loading
             binding.tvCityName.visibility = View.GONE
             binding.tvCurrentDegree.visibility = View.GONE
             binding.tvWeatherStatus.visibility = View.GONE
@@ -580,6 +656,7 @@ class HomeScreenActivity : AppCompatActivity() {
             binding.rvDetailedDays.visibility = View.GONE
             binding.tvDate.visibility = View.GONE
         } else {
+            // Show and animate views once loading is complete
             slideInFromLeft(binding.tvCityName)
             slideInFromLeft(binding.tvDate)
             dynamicTextAnimation(binding.tvCurrentDegree)
@@ -592,38 +669,55 @@ class HomeScreenActivity : AppCompatActivity() {
         }
     }
 
+    // Controls the visibility of the loading spinner based on the loading state
     private fun showLoading(isLoading: Boolean) {
+        // If `isLoading` is true, show the progress spinner; otherwise, hide it
         binding.progressCircular.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
+    // Adjusts visibility of certain UI elements when in "View-Only" mode
     private fun visibilityForViewerPage() {
+        // Check if the app is in "View-Only" mode
         if (isViewOnly) {
+            // Hide certain buttons that are not relevant in View-Only mode
             binding.btnMaps.visibility = View.GONE
             binding.btnFavourites.visibility = View.GONE
             binding.btnAlert.visibility = View.GONE
+            // Ensure the "Save" button is visible to allow saving current data
             binding.btnSave.visibility = View.VISIBLE
         }
     }
 
+    // Displays a snackbar message informing the user that data is loaded from the cache due to lack of network
     private fun showSnackBar() {
+        // Create a Snackbar with a message indicating no network connection, showing cached data
         val snackBar = Snackbar.make(
-            findViewById(R.id.content),
+            findViewById(R.id.content), // Root view for positioning the Snackbar
             getString(com.example.weatherforecast.R.string.no_network_connection_data_loaded_from_cache),
-            Snackbar.LENGTH_LONG
+            Snackbar.LENGTH_LONG // Duration of the Snackbar message
         )
+        // Show the Snackbar message on the screen
         snackBar.show()
     }
 
+    // Sets the app’s language based on user preference stored in settings
     private fun checkRunningLanguage() {
+        // Retrieve the user's preferred language from the settings
         val language = settingsViewModel.getLanguage()
+        // Create a Locale instance for the selected language
         val locale = Locale(language)
-        Log.e("lang", "curren lang $language")
+        // Set the app's default locale to the chosen language
         Locale.setDefault(locale)
+        // Create a new configuration for the selected language
         val config = Configuration()
         config.setLocale(locale)
+
+        // Apply the language configuration to the application context
         applicationContext.createConfigurationContext(config)
         applicationContext.resources.updateConfiguration(config, resources.displayMetrics)
+        // Apply the configuration for the current activity context
         createConfigurationContext(config)
         resources.updateConfiguration(config, resources.displayMetrics)
     }
+
 }

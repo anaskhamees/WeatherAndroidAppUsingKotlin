@@ -13,38 +13,50 @@
         android:fillViewport="true">
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/main"
+            android:id="@+id/mainLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/weather_background_dark"
-                tools:context=".Features.HomeScreen.view.HomeScreenActivity">
+            android:background="@drawable/night_background"
+            tools:context=".Features.HomeScreen.view.HomeScreenActivity">
+
+<!--            &lt;!&ndash; ImageView for background &ndash;&gt;-->
+<!--            <ImageView-->
+<!--               android:id="@+id/backgroundImageView"-->
+<!--               android:layout_width="match_parent"-->
+<!--               android:layout_height="match_parent"-->
+<!--               android:scaleType="centerCrop"-->
+<!--               android:src="@drawable/morning_background"-->
+<!--               android:contentDescription="@string/background_image" />-->
 
 
             <ImageView
-                android:id="@+id/btn_settings"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="30dp"
-                android:layout_marginEnd="16dp"
-                android:src="@drawable/ic_settings"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                    android:id="@+id/btn_settings"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="50dp"
+                    android:layout_marginEnd="16dp"
+                    android:src="@drawable/ic_settings"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
-                android:id="@+id/btn_favourites"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_favourites"
-                app:layout_constraintEnd_toStartOf="@id/btn_maps"
-                app:layout_constraintTop_toTopOf="@id/btn_settings" />
+                    android:id="@+id/btn_favourites"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_favourites"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_maps"
+                    app:layout_constraintBottom_toBottomOf="@+id/btn_maps"
+                    app:layout_constraintTop_toTopOf="@+id/btn_maps" />
 
             <ImageView
-                android:id="@+id/btn_maps"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_add_to_favs"
-                app:layout_constraintEnd_toStartOf="@id/btn_alert"
-                app:layout_constraintTop_toTopOf="@id/btn_settings" />
+                    android:id="@+id/btn_maps"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_add_to_favs"
+                    android:layout_marginEnd="16dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/btn_settings"
+                    android:layout_marginTop="2dp" />
 
             <ImageView
                 android:id="@+id/btn_alert"
@@ -87,7 +99,7 @@
                 app:layout_constraintEnd_toStartOf="@+id/btn_favourites"
                 app:layout_constraintStart_toEndOf="@id/ic_home_location"
                 app:layout_constraintTop_toTopOf="@id/ic_home_location"
-                tools:text="Tagmou3" />
+                tools:text="Alexandria" />
 
             <TextView
                 android:id="@+id/tv_date"
@@ -131,55 +143,56 @@
                 app:layout_constraintVertical_bias="0.39" />
 
             <TextView
-                android:id="@+id/tv_current_degree"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="-5dp"
-                android:textColor="@color/white"
-                android:textSize="55sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toEndOf="@id/anim_weather"
-                app:layout_constraintTop_toTopOf="@id/anim_weather"
-                tools:text="38°C" />
+                    android:id="@+id/tv_current_degree"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:textColor="@color/white"
+                    android:textSize="40sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toEndOf="@id/anim_weather"
+                    app:layout_constraintTop_toTopOf="@id/anim_weather"
+                    tools:text="38°C" />
 
             <TextView
-                android:id="@+id/tv_weather_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="-10dp"
-                android:textColor="@color/white"
-                android:textSize="20sp"
-                app:layout_constraintEnd_toEndOf="@+id/tv_current_degree"
-                app:layout_constraintStart_toStartOf="@id/tv_current_degree"
-                app:layout_constraintTop_toBottomOf="@id/tv_current_degree"
-                tools:text="Mostly Clear" />
+                    android:id="@+id/tv_weather_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    app:layout_constraintEnd_toEndOf="@+id/tv_current_degree"
+                    app:layout_constraintStart_toStartOf="@id/tv_current_degree"
+                    app:layout_constraintTop_toBottomOf="@id/tv_current_degree"
+                    tools:text="Mostly Clear"
+                    app:layout_constraintHorizontal_bias="0.0" />
 
             <TextView
-                android:id="@+id/tv_temp_min"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:textColor="#99FFFFFF"
-                android:textSize="16sp"
-                app:layout_constraintEnd_toStartOf="@+id/tv_temp_max"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toEndOf="@+id/anim_weather"
-                app:layout_constraintStart_toStartOf="@id/tv_weather_status"
-                app:layout_constraintTop_toBottomOf="@id/tv_weather_status"
-                tools:text="L:23°C" />
+                    android:id="@+id/tv_temp_max"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="#99FFFFFF"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="@+id/tv_weather_status"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@+id/tv_temp_min"
+                    app:layout_constraintTop_toBottomOf="@id/tv_weather_status"
+                    tools:text="H:42°C" />
 
             <TextView
-                android:id="@+id/tv_temp_max"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:textColor="#99FFFFFF"
-                android:textSize="16sp"
-                app:layout_constraintEnd_toEndOf="@+id/tv_weather_status"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toEndOf="@+id/tv_temp_min"
-                app:layout_constraintTop_toBottomOf="@id/tv_weather_status"
-                tools:text="H:42°C" />
+                    android:id="@+id/tv_temp_min"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="#99FFFFFF"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toStartOf="@+id/tv_temp_max"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@+id/anim_weather"
+                    app:layout_constraintStart_toStartOf="@id/tv_weather_status"
+                    app:layout_constraintTop_toBottomOf="@id/tv_weather_status"
+                    tools:text="L:23°C" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_hourly_degrees"
@@ -422,7 +435,7 @@
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="25dp"
                 android:layout_marginBottom="20dp"
-                app:cardBackgroundColor="@color/white"
+                app:cardBackgroundColor="@color/fillCard"
                 app:cardCornerRadius="28dp"
                 app:cardElevation="0dp"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -451,7 +464,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="12dp"
-                        android:text="@string/week_forecast"
+                        android:text="Week Forecast"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="@id/imv_week_forecast"
                         app:layout_constraintStart_toEndOf="@id/imv_week_forecast"
                         app:layout_constraintTop_toTopOf="@id/imv_week_forecast" />
@@ -470,8 +485,6 @@
                         tools:listitem="@layout/item_daily" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.cardview.widget.CardView>
-
-
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

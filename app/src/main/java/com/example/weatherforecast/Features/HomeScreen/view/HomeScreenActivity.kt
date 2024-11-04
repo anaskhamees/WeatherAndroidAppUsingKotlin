@@ -10,12 +10,10 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -53,12 +51,12 @@ import com.example.weatherforecast.Utils.Constants.SHARED_PREFS_NAME
 import com.example.weatherforecast.Utils.Constants.TEMPERATURE_FORMAT
 import com.example.weatherforecast.Utils.Helpers.convertTempUnitFromCelsiusToAny
 import com.example.weatherforecast.Utils.Helpers.convertWindSpeed
-import com.example.weatherforecast.Utils.Helpers.date
+import com.example.weatherforecast.Utils.Helpers.getCurrentDate
 import com.example.weatherforecast.Utils.Helpers.formatTime
 import com.example.weatherforecast.Utils.Helpers.getTempUnitSymbol
 import com.example.weatherforecast.Utils.Helpers.getWindSpeedUnitSymbol
 import com.example.weatherforecast.Utils.Helpers.isNetworkAvailable
-import com.example.weatherforecast.Utils.HomeScreenHelper.checkWeatherDescription
+import com.example.weatherforecast.Utils.HomeScreenHelper.checkWeatherDescriptionForAnimation
 import com.example.weatherforecast.Utils.HomeScreenHelper.dynamicTextAnimation
 import com.example.weatherforecast.Utils.HomeScreenHelper.slideInAndScaleView
 import com.example.weatherforecast.Utils.HomeScreenHelper.slideInFromLeft
@@ -319,7 +317,7 @@ class HomeScreenActivity : AppCompatActivity() {
 
 
         // Set Lottie based on weather
-        val lottieAnimation = checkWeatherDescription(this, weather)
+        val lottieAnimation = checkWeatherDescriptionForAnimation(this, weather)
         binding.animWeather.setAnimation(lottieAnimation)
         binding.animWeather.playAnimation()
 
@@ -358,7 +356,7 @@ class HomeScreenActivity : AppCompatActivity() {
         binding.tvWeatherStatus.text = weather.weather[0].description
             .split(" ")
             .joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
-        binding.tvDate.text = date()
+        binding.tvDate.text = getCurrentDate()
         binding.tvPressureValue.text = getString(com.example.weatherforecast.R.string.hpa, weather.main.pressure)
         binding.tvHumidityValue.text = "${weather.main.humidity} %"
         val windSpeed = convertWindSpeed(weather.wind.speed, METER_PER_SECOND, windSpeedUnit)

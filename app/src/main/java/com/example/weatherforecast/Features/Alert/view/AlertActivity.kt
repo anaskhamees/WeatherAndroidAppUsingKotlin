@@ -27,16 +27,34 @@ import com.example.weatherforecast.Features.Alert.viewModel.AlertViewModel
 import com.example.weatherforecast.Features.Alert.viewModel.AlertViewModelFactory
 import java.util.Calendar
 
+/**
+ * AlertActivity is responsible for managing the user interface for setting and viewing alarms.
+ * It allows users to add new alarms, view existing alarms, and delete alarms using a swipe gesture.
+ */
 class AlertActivity : AppCompatActivity() {
+
+    // Binding object to access UI elements
     private lateinit var binding: ActivityAlertBinding
+
+    // Variable to store the selected alarm time in milliseconds
     private var selectedTimeInMillis: Long = 0
+
+    // ViewModel instance for managing alarm data
     private lateinit var alarmViewModel: AlertViewModel
+
+    // Adapter for displaying alarms in a RecyclerView
     private lateinit var alarmAdapter: AlertAdapter
 
+    /**
+     * Called when the activity is first created. Initializes the UI and sets up necessary components.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Inflate the layout using view binding
         binding = ActivityAlertBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Initialize the ViewModel with the AlertDataSource implementation
         alarmViewModel = ViewModelProvider(
             this,
             AlertViewModelFactory(
@@ -48,30 +66,41 @@ class AlertActivity : AppCompatActivity() {
             )
         )[AlertViewModel::class.java]
 
+        // Set up the RecyclerView for displaying alarms
         setUpRecyclerView()
 
-        // Load alarms when activity starts
+        // Load alarms when the activity starts
         alarmViewModel.loadAlarms()
 
+        // Set up click listener for the back button
         binding.btnBack.setOnClickListener {
             finish()
         }
+
+        // Set up click listener for the add alert button
         binding.btnAddAlert.setOnClickListener {
             showDatePicker()
         }
     }
 
+    /**
+     * Configures the RecyclerView for displaying alarms.
+     */
     private fun setUpRecyclerView() {
+        // Initialize the adapter
         alarmAdapter = AlertAdapter()
         binding.rvAlerts.layoutManager = LinearLayoutManager(this)
         binding.rvAlerts.adapter = alarmAdapter
 
+        // Observe the alarms LiveData and update the UI accordingly
         alarmViewModel.alarms.observe(this) { alarmList ->
             if (alarmList.isEmpty()) {
+                // Show a message if there are no alarms
                 binding.tvNoItems.visibility = View.VISIBLE
                 binding.imcNoSaved.visibility = View.VISIBLE
                 binding.rvAlerts.visibility = View.GONE
             } else {
+                // Update the UI to display alarms
                 binding.tvNoItems.visibility = View.GONE
                 binding.imcNoSaved.visibility = View.GONE
                 binding.rvAlerts.visibility = View.VISIBLE
@@ -79,33 +108,44 @@ class AlertActivity : AppCompatActivity() {
             }
         }
 
-        // Set up swipe-to-delete
+        // Set up swipe-to-delete functionality
         val swipeToDeleteCallback = SwipeToDeleteCallback(
             onSwipedAction = { position ->
+                // Get the alarm at the swiped position
                 val alarm = alarmAdapter.currentList[position]
+                // Show a confirmation dialog for deletion
                 showDeleteConfirmationDialog(alarm, position)
             },
             iconResId = R.drawable.ic_delete // Use the delete icon
         )
 
+        // Attach the swipe-to-delete functionality to the RecyclerView
         val itemTouchHelper = ItemTouchHelper(swipeToDeleteCallback)
         itemTouchHelper.attachToRecyclerView(binding.rvAlerts)
     }
 
+    /**
+     * Displays a confirmation dialog for deleting an alarm.
+     * @param alarm The alarm to be deleted.
+     * @param position The position of the alarm in the RecyclerView.
+     */
     private fun showDeleteConfirmationDialog(alarm: AlarmEntity, position: Int) {
         val dialog = AlertDialog.Builder(this)
             .setTitle(getString(R.string.delete_alert))
             .setMessage(getString(R.string.are_you_sure_you_want_to_delete_this_alert))
             .setPositiveButton(getString(R.string.yes)) { dialog, _ ->
+                // Delete the alarm and dismiss the dialog
                 alarmViewModel.deleteAlarm(alarm)
                 dialog.dismiss()
             }
             .setNegativeButton(getString(R.string.no)) { dialog, _ ->
-                alarmAdapter.notifyItemChanged(position) // Revert swipe if the user cancels
+                // Revert swipe if the user cancels the deletion
+                alarmAdapter.notifyItemChanged(position)
                 dialog.dismiss()
             }
             .create()
 
+        // Customize button colors in the dialog
         dialog.setOnShowListener {
             val buttonOk = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
             val buttonCancel = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
@@ -115,9 +155,10 @@ class AlertActivity : AppCompatActivity() {
         dialog.show()
     }
 
-
+    /**
+     * Displays a date picker dialog for selecting an alarm date.
+     */
     private fun showDatePicker() {
-
         val calendar = Calendar.getInstance()
         val datePickerDialog = DatePickerDialog(
             this, R.style.CustomDatePickerDialog,
@@ -125,43 +166,46 @@ class AlertActivity : AppCompatActivity() {
                 calendar.set(Calendar.YEAR, year)
                 calendar.set(Calendar.MONTH, monthOfYear)
                 calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                // After selecting a date, show the time picker
                 showTimePicker(calendar)
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
+        // Set the minimum date to the current date
         datePickerDialog.datePicker.minDate = System.currentTimeMillis()
         datePickerDialog.show()
     }
 
+    /**
+     * Displays a time picker dialog for selecting an alarm time.
+     * @param calendar The calendar object with the selected date.
+     */
     private fun showTimePicker(calendar: Calendar) {
-        // Get the current time
         val now = Calendar.getInstance()
-
         // Check if the selected date is today
         val isToday = now.get(Calendar.YEAR) == calendar.get(Calendar.YEAR) &&
                 now.get(Calendar.DAY_OF_YEAR) == calendar.get(Calendar.DAY_OF_YEAR)
 
-        // Set the initial hour and minute based on whether it’s today
+        // Set initial hour and minute based on whether it’s today
         val hour = if (isToday) now.get(Calendar.HOUR_OF_DAY) else 0
         val minute = if (isToday) now.get(Calendar.MINUTE) else 0
 
         val timePickerDialog = TimePickerDialog(
             this, R.style.CustomTimePickerDialog,
             { _, hourOfDay, minute ->
-                // Check if the selected time is in the past
+                // Validate the selected time to ensure it's not in the past
                 if (isToday && (hourOfDay < now.get(Calendar.HOUR_OF_DAY) ||
                             (hourOfDay == now.get(Calendar.HOUR_OF_DAY) && minute < now.get(Calendar.MINUTE)))
                 ) {
-                    // Show toast message if selected time is in the past
                     Toast.makeText(
                         this,
                         "This time has already passed. Please select a future time.",
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
-                    // If valid time, set the calendar and proceed
+                    // Set the calendar with the selected time and proceed to check permissions
                     calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
                     calendar.set(Calendar.MINUTE, minute)
                     calendar.set(Calendar.SECOND, 0)
@@ -177,25 +221,34 @@ class AlertActivity : AppCompatActivity() {
         timePickerDialog.show()
     }
 
+    /**
+     * Checks for permission to set exact alarms on devices running Android S (API level 31) and above.
+     */
     private fun checkExactAlarmPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val alarmManager = this.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            // Check if the app can schedule exact alarms
             if (!alarmManager.canScheduleExactAlarms()) {
+                // Request permission from the user
                 val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
                 startActivityForResult(intent, 2000)
             } else {
-                setAlarm(selectedTimeInMillis)
+                setAlarm(selectedTimeInMillis) // Set the alarm if permission is granted
             }
         } else {
-            setAlarm(selectedTimeInMillis)
+            setAlarm(selectedTimeInMillis) // For older versions, set the alarm directly
         }
     }
 
+    /**
+     * Handles the result of permission requests for overlay and exact alarm permissions.
+     */
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             1000 -> {
+                // Handle overlay permission result
                 if (Settings.canDrawOverlays(this)) {
                     checkExactAlarmPermission()
                 } else {
@@ -206,43 +259,39 @@ class AlertActivity : AppCompatActivity() {
                     ).show()
                 }
             }
-
             2000 -> {
-                val alarmManager = this.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                if (alarmManager.canScheduleExactAlarms()) {
+                // Handle exact alarm permission result
+                if (resultCode == RESULT_OK) {
                     setAlarm(selectedTimeInMillis)
-                } else {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.exact_alarm_permission_is_required_to_set_alarms),
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
             }
         }
     }
 
-    @Suppress("DEPRECATION")
+    /**
+     * Checks if the application has permission to display overlays.
+     * If not, it requests the user to grant overlay permission.
+     */
     private fun checkOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(this)) {
-                val intent = Intent(
-                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + this.packageName)
-                )
-                startActivityForResult(intent, 1000)
+            if (Settings.canDrawOverlays(this)) {
+                checkExactAlarmPermission() // Check for exact alarm permission
             } else {
-                checkExactAlarmPermission()
+                // Request overlay permission from the user
+                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+                startActivityForResult(intent, 1000)
             }
         } else {
-            checkExactAlarmPermission()
+            checkExactAlarmPermission() // For older versions, check for exact alarm permission directly
         }
     }
 
+    /**
+     * Sets an alarm at the specified time.
+     * @param timeInMillis The time in milliseconds when the alarm should go off.
+     */
     private fun setAlarm(timeInMillis: Long) {
-        alarmViewModel.setAlarm(timeInMillis)
-        Toast.makeText(this, getString(R.string.alarm_set), Toast.LENGTH_SHORT).show()
-        alarmViewModel.loadAlarms()
+        alarmViewModel.setAlarm(timeInMillis) // Set the alarm using the ViewModel
+        Toast.makeText(this, "Alarm set for ${Calendar.getInstance().time}", Toast.LENGTH_SHORT).show()
     }
-
 }

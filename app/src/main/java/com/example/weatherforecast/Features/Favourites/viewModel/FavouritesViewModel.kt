@@ -2,7 +2,7 @@ package com.example.weatherforecast.Features.Favourites.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.weatherforecast.Data.DataBase.room.WeatherDataState
+import com.example.weatherforecast.Data.DataBase.room.WeatherLocalDataSrcState
 import com.example.weatherforecast.Data.Model.WeatherEntity
 import com.example.weatherforecast.Data.Repository.Repository
 import kotlinx.coroutines.flow.*
@@ -10,8 +10,8 @@ import kotlinx.coroutines.launch
 
 class FavouritesViewModel(private val repository: Repository) : ViewModel() {
 
-    private val _weatherDataState = MutableStateFlow<WeatherDataState>(WeatherDataState.Loading)
-    val weatherDataState: StateFlow<WeatherDataState> = _weatherDataState
+    private val _weatherLocalDataSrcState = MutableStateFlow<WeatherLocalDataSrcState>(WeatherLocalDataSrcState.Loading)
+    val weatherLocalDataSrcState: StateFlow<WeatherLocalDataSrcState> = _weatherLocalDataSrcState
 
     init {
         fetchAllWeatherData()
@@ -20,15 +20,15 @@ class FavouritesViewModel(private val repository: Repository) : ViewModel() {
     private fun fetchAllWeatherData() {
         viewModelScope.launch {
             repository.getAllWeatherData()
-                .onStart { _weatherDataState.value = WeatherDataState.Loading }
+                .onStart { _weatherLocalDataSrcState.value = WeatherLocalDataSrcState.Loading }
                 .catch { exception ->
-                    _weatherDataState.value = WeatherDataState.Error(exception.message ?: "Error occurred")
+                    _weatherLocalDataSrcState.value = WeatherLocalDataSrcState.Error(exception.message ?: "Error occurred")
                 }
                 .collect { weatherList ->
-                    _weatherDataState.value = if (weatherList.isEmpty()) {
-                        WeatherDataState.Empty
+                    _weatherLocalDataSrcState.value = if (weatherList.isEmpty()) {
+                        WeatherLocalDataSrcState.Empty
                     } else {
-                        WeatherDataState.Success(weatherList)
+                        WeatherLocalDataSrcState.Success(weatherList)
                     }
                 }
         }

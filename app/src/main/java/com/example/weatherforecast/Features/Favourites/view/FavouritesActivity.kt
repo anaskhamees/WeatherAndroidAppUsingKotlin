@@ -15,7 +15,7 @@ import com.example.weatherforecast.R
 import com.example.weatherforecast.Data.DataBase.local.favourites.LocalDataSourceImpl
 import com.example.weatherforecast.Data.Network.RemoteDataSourceImpl
 import com.example.weatherforecast.Data.DataBase.room.AppDatabase
-import com.example.weatherforecast.Data.DataBase.room.WeatherDataState
+import com.example.weatherforecast.Data.DataBase.room.WeatherLocalDataSrcState
 import com.example.weatherforecast.Data.DataBase.sharedPrefrences.SharedPrefsDataSourceImpl
 import com.example.weatherforecast.Data.Model.WeatherEntity
 import com.example.weatherforecast.Data.Network.ApiClient
@@ -127,15 +127,15 @@ class FavouritesActivity : AppCompatActivity() {
 
     private fun setUpObservers() {
         lifecycleScope.launch {
-            favouritesViewModel.weatherDataState.collect { state ->
+            favouritesViewModel.weatherLocalDataSrcState.collect { state ->
                 when (state) {
-                    is WeatherDataState.Loading -> {
+                    is WeatherLocalDataSrcState.Loading -> {
                         // binding.progressBar.visibility = View.VISIBLE
                         binding.rvFavs.visibility = View.GONE
                         binding.tvNoItems.visibility = View.GONE
                         binding.imcNoSaved.visibility = View.GONE
                     }
-                    is WeatherDataState.Success -> {
+                    is WeatherLocalDataSrcState.Success -> {
                         // binding.progressBar.visibility = View.GONE
                         binding.rvFavs.visibility = View.VISIBLE
                         binding.tvNoItems.visibility = View.GONE
@@ -152,13 +152,13 @@ class FavouritesActivity : AppCompatActivity() {
                             ).show()
                         }
                     }
-                    is WeatherDataState.Empty -> {
+                    is WeatherLocalDataSrcState.Empty -> {
                         // binding.progressBar.visibility = View.GONE
                         binding.rvFavs.visibility = View.GONE
                         binding.tvNoItems.visibility = View.VISIBLE
                         binding.imcNoSaved.visibility = View.VISIBLE
                     }
-                    is WeatherDataState.Error -> {
+                    is WeatherLocalDataSrcState.Error -> {
                         // binding.progressBar.visibility = View.GONE
                         binding.rvFavs.visibility = View.GONE
                         Toast.makeText(

@@ -28,7 +28,7 @@ class FavouritesViewModelTest {
         viewModel = FavouritesViewModel(repository) // Initialize the ViewModel with the mock repository
     }
 
-    // Integration test to verify the insertion of weather data into the repository
+    // Unit test to verify the insertion of weather data into the repository
     @Test
     fun `test insert weather data`() = runTest {
         // Create a fake WeatherEntity object to simulate a weather data entry

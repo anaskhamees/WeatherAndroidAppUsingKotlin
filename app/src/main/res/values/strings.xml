@@ -77,4 +77,5 @@
     <string name="good_afternoon">Good Afternoon.</string>
     <string name="good_evening">Good Evening.</string>
     <string name="background_image">imgBackGround</string>
+    <string name="WeatherForecastApp">weather_forcaste</string>
 </resources>

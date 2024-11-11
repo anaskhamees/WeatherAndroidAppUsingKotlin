@@ -28,7 +28,7 @@ class AlarmService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         alarmId = intent?.getIntExtra(ALARM_ID_TO_DISMISS, -1) ?: -1
-        mediaPlayer = MediaPlayer.create(this, R.raw.alarm_clock).apply {
+        mediaPlayer = MediaPlayer.create(this, R.raw.alarm_clock_sound).apply {
             isLooping = true
             start()
         }

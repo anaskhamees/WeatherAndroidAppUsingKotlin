@@ -15,6 +15,7 @@ import com.example.weatherforecast.R
 import com.example.weatherforecast.Data.DataBase.local.favourites.LocalDataSourceImpl
 import com.example.weatherforecast.Data.Network.RemoteDataSourceImpl
 import com.example.weatherforecast.Data.DataBase.room.AppDatabase
+import com.example.weatherforecast.Data.DataBase.room.WeatherDataState
 import com.example.weatherforecast.Data.DataBase.sharedPrefrences.SharedPrefsDataSourceImpl
 import com.example.weatherforecast.Data.Model.WeatherEntity
 import com.example.weatherforecast.Data.Network.ApiClient
@@ -40,10 +41,7 @@ class FavouritesActivity : AppCompatActivity() {
                 remoteDataSource = RemoteDataSourceImpl(
                     apiService = ApiClient.retrofit,
                     sharedPrefsDataSource = SharedPrefsDataSourceImpl(
-                        this.getSharedPreferences(
-                            SHARED_PREFS_NAME,
-                            MODE_PRIVATE
-                        )
+                        this.getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE)
                     )
                 ),
                 sharedPrefsDataSource = SharedPrefsDataSourceImpl(
@@ -61,10 +59,7 @@ class FavouritesActivity : AppCompatActivity() {
                 remoteDataSource = RemoteDataSourceImpl(
                     apiService = ApiClient.retrofit,
                     sharedPrefsDataSource = SharedPrefsDataSourceImpl(
-                        this.getSharedPreferences(
-                            SHARED_PREFS_NAME,
-                            MODE_PRIVATE
-                        )
+                        this.getSharedPreferences(SHARED_PREFS_NAME, MODE_PRIVATE)
                     )
                 ),
                 sharedPrefsDataSource = SharedPrefsDataSourceImpl(
@@ -94,13 +89,12 @@ class FavouritesActivity : AppCompatActivity() {
         binding.rvFavs.layoutManager = LinearLayoutManager(this)
         binding.rvFavs.adapter = favouritesAdapter
 
-        // Use the reusable swipe-to-delete callback
         val swipeToDeleteCallback = SwipeToDeleteCallback(
             onSwipedAction = { position ->
                 val weatherEntity = favouritesAdapter.currentList[position]
                 showDeleteConfirmationDialog(weatherEntity, position)
             },
-            iconResId = R.drawable.ic_delete // Pass the delete icon resource
+            iconResId = R.drawable.ic_delete
         )
 
         val itemTouchHelper = ItemTouchHelper(swipeToDeleteCallback)
@@ -133,20 +127,51 @@ class FavouritesActivity : AppCompatActivity() {
 
     private fun setUpObservers() {
         lifecycleScope.launch {
-            favouritesViewModel.allWeatherData.collect { weatherList ->
-                if (weatherList.isEmpty()) {
-                    binding.tvNoItems.visibility = View.VISIBLE
-                    binding.imcNoSaved.visibility = View.VISIBLE
-                    binding.rvFavs.visibility = View.GONE
-                } else {
-                    binding.tvNoItems.visibility = View.GONE
-                    binding.imcNoSaved.visibility = View.GONE
-                    binding.rvFavs.visibility = View.VISIBLE
-                    favouritesAdapter.submitList(weatherList)
+            favouritesViewModel.weatherDataState.collect { state ->
+                when (state) {
+                    is WeatherDataState.Loading -> {
+                        // binding.progressBar.visibility = View.VISIBLE
+                        binding.rvFavs.visibility = View.GONE
+                        binding.tvNoItems.visibility = View.GONE
+                        binding.imcNoSaved.visibility = View.GONE
+                    }
+                    is WeatherDataState.Success -> {
+                        // binding.progressBar.visibility = View.GONE
+                        binding.rvFavs.visibility = View.VISIBLE
+                        binding.tvNoItems.visibility = View.GONE
+                        binding.imcNoSaved.visibility = View.GONE
+                        val weatherList = state.data as? List<WeatherEntity> // Cast data to List<WeatherEntity>
+                        if (weatherList != null) {
+                            favouritesAdapter.submitList(weatherList)
+                        } else {
+                            // Handle case where data is not of type List<WeatherEntity>
+                            Toast.makeText(
+                                this@FavouritesActivity,
+                                "data_type_error",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                    is WeatherDataState.Empty -> {
+                        // binding.progressBar.visibility = View.GONE
+                        binding.rvFavs.visibility = View.GONE
+                        binding.tvNoItems.visibility = View.VISIBLE
+                        binding.imcNoSaved.visibility = View.VISIBLE
+                    }
+                    is WeatherDataState.Error -> {
+                        // binding.progressBar.visibility = View.GONE
+                        binding.rvFavs.visibility = View.GONE
+                        Toast.makeText(
+                            this@FavouritesActivity,
+                            state.message,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }
     }
+
 
     private fun onButtonClicks() {
         binding.btnBack.setOnClickListener {
